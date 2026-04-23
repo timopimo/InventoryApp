@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inventory Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Inventory Manager</h1>
+        <p>Manage products, stock levels, and categories in one place.</p>
+      </header>
+
+      <section class="card">
+        <h2>Add Product</h2>
+        <form id="add-form" class="form-grid">
+          <input id="name" name="name" placeholder="Product name" required />
+          <input id="category" name="category" placeholder="Category" required />
+          <input id="quantity" name="quantity" type="number" min="0" placeholder="Quantity" required />
+          <button type="submit">Add Product</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Products</h2>
+        <div id="message" aria-live="polite"></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Quantity</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="products-body"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script>
+      const productsBody = document.getElementById('products-body');
+      const message = document.getElementById('message');
+      const addForm = document.getElementById('add-form');
+
+      function showMessage(text, isError = false) {
+        message.textContent = text;
+        message.className = isError ? 'error' : 'success';
+      }
+
+      async function fetchProducts() {
+        const response = await fetch('/api/products');
+        const products = await response.json();
+        productsBody.innerHTML = '';
+
+        for (const product of products) {
+          const row = document.createElement('tr');
+          const nameCell = document.createElement('td');
+          nameCell.textContent = product.name;
+
+          const categoryCell = document.createElement('td');
+          categoryCell.textContent = product.category;
+
+          const quantityCell = document.createElement('td');
+          const quantityInput = document.createElement('input');
+          quantityInput.type = 'number';
+          quantityInput.min = '0';
+          quantityInput.value = String(product.quantity);
+          quantityInput.setAttribute('data-id', product.id);
+          quantityInput.className = 'qty-input';
+          quantityInput.setAttribute('aria-label', `Quantity for ${product.name}`);
+          quantityCell.appendChild(quantityInput);
+
+          const actionsCell = document.createElement('td');
+          const updateButton = document.createElement('button');
+          updateButton.className = 'update-btn';
+          updateButton.setAttribute('data-id', product.id);
+          updateButton.textContent = 'Update';
+
+          const deleteButton = document.createElement('button');
+          deleteButton.className = 'danger';
+          deleteButton.setAttribute('data-delete-id', product.id);
+          deleteButton.textContent = 'Delete';
+
+          actionsCell.appendChild(updateButton);
+          actionsCell.appendChild(deleteButton);
+
+          row.appendChild(nameCell);
+          row.appendChild(categoryCell);
+          row.appendChild(quantityCell);
+          row.appendChild(actionsCell);
+          productsBody.appendChild(row);
+        }
+      }
+
+      addForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const payload = {
+          name: document.getElementById('name').value,
+          category: document.getElementById('category').value,
+          quantity: document.getElementById('quantity').value,
+        };
+
+        const response = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          showMessage(data.error || 'Failed to add product.', true);
+          return;
+        }
+
+        addForm.reset();
+        await fetchProducts();
+        showMessage('Product added successfully.');
+      });
+
+      productsBody.addEventListener('click', async (event) => {
+        const target = event.target;
+
+        if (target.matches('[data-delete-id]')) {
+          const id = target.getAttribute('data-delete-id');
+          const response = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+          if (!response.ok) {
+            showMessage('Failed to delete product.', true);
+            return;
+          }
+          await fetchProducts();
+          showMessage('Product deleted successfully.');
+          return;
+        }
+
+        if (target.matches('.update-btn')) {
+          const id = target.getAttribute('data-id');
+          const input = document.querySelector(`.qty-input[data-id="${id}"]`);
+          const quantity = input.value;
+
+          const response = await fetch(`/api/products/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quantity }),
+          });
+
+          if (!response.ok) {
+            const data = await response.json();
+            showMessage(data.error || 'Failed to update quantity.', true);
+            return;
+          }
+
+          await fetchProducts();
+          showMessage('Quantity updated successfully.');
+        }
+      });
+
+      fetchProducts().catch(() => showMessage('Failed to load products.', true));
+    </script>
+  </body>
+</html>
