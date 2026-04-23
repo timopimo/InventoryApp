@@ -1,0 +1,107 @@
+:root {
+  --bg: #0f172a;
+  --card: #111827;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --accent: #3b82f6;
+  --danger: #ef4444;
+  --border: #1f2937;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #1e293b, var(--bg));
+  color: var(--text);
+}
+
+.container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+header h1 {
+  margin-bottom: 0.2rem;
+}
+
+header p {
+  color: var(--muted);
+  margin-top: 0;
+}
+
+.card {
+  background: rgba(17, 24, 39, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.form-grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+input,
+button {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #0b1220;
+  color: var(--text);
+  padding: 0.6rem 0.7rem;
+}
+
+button {
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+}
+
+button.danger {
+  background: var(--danger);
+}
+
+td button + button {
+  margin-left: 0.3rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.7rem 0.5rem;
+  text-align: left;
+}
+
+.qty-input {
+  width: 90px;
+}
+
+#message {
+  min-height: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#message.error {
+  color: #fca5a5;
+}
+
+#message.success {
+  color: #86efac;
+}
+
+@media (max-width: 760px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
